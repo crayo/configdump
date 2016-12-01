@@ -4,15 +4,20 @@ process.env.SUPPRESS_NO_CONFIG_WARNING = true;
 // (see https://github.com/lorenwest/node-config/wiki/Strict-Mode)
 process.env.NODE_CONFIG_STRICT_MODE = true;
 
+let _ = require('lodash');
 let config = require('config');
+let util = require('util');
+
+// parse command line arguments
 let argv = require('minimist')(
 	process.argv.slice(2),
 	{
 		alias: {
+			'c': 'color',
 			'f': 'filter',
 			'v': 'verbose'
 		},
-		boolean: ['verbose'],
+		boolean: ['color', 'verbose'],
 		string: ['filter']
 	}
 );
@@ -26,20 +31,46 @@ let configSources = config.util.getConfigSources();
 if (configSources.length > 0) {
 	let outputData = null;
 	if (argv.verbose) {
-		outputData = config.util.cloneDeep(configSources);
+		rawConfigs = config.util.cloneDeep(configSources);
+
+		if (argv.filter) {
+			outputData = [];
+			rawConfigs.forEach((configData) => {
+				let filterData = _.first(_.at(configData.parsed, argv.filter));
+				if (filterData) {
+					outputData.push({
+						'source': configData.name,
+						'data': filterData
+					});
+				}
+			});
+		}
+		else {
+			outputData = rawConfigs;
+		}
 	}
 	else {
 		outputData = argv.filter ? config.get(argv.filter) : config.util.cloneDeep(config);
 	}
 
 	try {
-		console.log(
+		let outputString =
+			argv.color ?
+			util.inspect(
+				outputData,
+				{
+					colors: true,
+					depth: null
+				}
+			) :
 			JSON.stringify(
 				outputData,
 				null,
 				2
 			)
-		);
+		;
+
+		console.log(outputString);
 	}
 	catch (err) {
 		console.error(err);
