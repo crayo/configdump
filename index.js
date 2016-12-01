@@ -31,48 +31,39 @@ let configSources = config.util.getConfigSources();
 if (configSources.length > 0) {
 	let outputData = null;
 	if (argv.verbose) {
-		rawConfigs = config.util.cloneDeep(configSources);
+		rawConfigs = _.cloneDeep(configSources);
 
 		if (argv.filter) {
-			outputData = [];
-			rawConfigs.forEach((configData) => {
-				let filterData = _.first(_.at(configData.parsed, argv.filter));
-				if (filterData) {
-					outputData.push({
-						'source': configData.name,
-						'data': filterData
-					});
-				}
-			});
+			outputData = _.reduce(
+				rawConfigs, 
+				(result, configData) => {
+					let filterData = _.get(configData.parsed, argv.filter);
+					if (filterData) {
+						result.push({
+							'source': configData.name,
+							'data': _.cloneDeep(filterData)
+						});
+					}
+					return result;
+				},
+				[]
+			);
 		}
 		else {
 			outputData = rawConfigs;
 		}
 	}
 	else {
-		outputData = argv.filter ? config.get(argv.filter) : config.util.cloneDeep(config);
+		outputData = argv.filter ? config.get(argv.filter) : _.cloneDeep(config);
 	}
 
-	try {
-		let outputString =
-			argv.color ?
-			util.inspect(
-				outputData,
-				{
-					colors: true,
-					depth: null
-				}
-			) :
-			JSON.stringify(
-				outputData,
-				null,
-				2
-			)
-		;
-
-		console.log(outputString);
-	}
-	catch (err) {
-		console.error(err);
-	}
+	console.log(
+		util.inspect(
+			outputData,
+			{
+				colors: argv.color,
+				depth: null
+			}
+		)
+	);
 }
