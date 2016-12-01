@@ -18,6 +18,10 @@ let argv = require('minimist')(
 			'v': 'verbose'
 		},
 		boolean: ['color', 'verbose'],
+		default: {
+			'color': false,
+			'verbose': false
+		},
 		string: ['filter']
 	}
 );
