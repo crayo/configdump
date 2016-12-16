@@ -61,13 +61,13 @@ if (configSources.length > 0) {
 		outputData = argv.filter ? config.get(argv.filter) : _.cloneDeep(config);
 	}
 
-	console.log(
+	process.stdout.write(
 		util.inspect(
 			outputData,
 			{
 				colors: argv.color,
 				depth: null
 			}
-		)
+		) + "\n"
 	);
 }
